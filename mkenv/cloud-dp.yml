@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-provisioner
+  namespace: cloud-storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloud-provisioner
+  template:
+    metadata:
+      labels:
+        app: cloud-provisioner
+    spec:
+      serviceAccountName: cloud-sa
+      containers:
+        - name: nfs-client-provisioner
+          image: registry.k8s.io/sig-storage/nfs-subdir-external-provisioner:v4.0.2
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME
+              value: cloud-prov
+            - name: NFS_SERVER
+              value: 192.168.0.18     # ⚠️ 반드시 수정
+            - name: NFS_PATH
+              value: /volume1                  # ⚠️ NFS 공유 디렉터리 경로
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: 192.168.0.18      # ⚠️ 동일하게 수정
+            path: /volume1

@@ -1,0 +1,10 @@
+.btn-upload {
+  background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%) !important;
+  color: white !important;
+  border: none !important;
+  font-weight: 600;
+}
+
+.btn-upload:hover {
+  background: linear-gradient(135deg, #45a049 0%, #7cb342 100%) !important;
+}
