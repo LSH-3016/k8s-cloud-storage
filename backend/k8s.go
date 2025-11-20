@@ -58,6 +58,21 @@ type PVCInfo struct {
 	StorageClass string `json:"storageClass"`
 }
 
+type ServiceInfo struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+	Type      string `json:"type"`
+	ClusterIP string `json:"clusterIP"`
+	Ports     string `json:"ports"`
+}
+
+type StorageClassInfo struct {
+	Name        string `json:"name"`
+	Provisioner string `json:"provisioner"`
+	ReclaimPolicy string `json:"reclaimPolicy"`
+	VolumeBindingMode string `json:"volumeBindingMode"`
+}
+
 func getK8sResources(c *gin.Context) {
 	if k8sClient == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "K8s client not initialized"})
@@ -134,9 +149,58 @@ func getK8sResources(c *gin.Context) {
 		}
 	}
 
+	// Services
+	services, err := k8sClient.CoreV1().Services("").List(ctx, metav1.ListOptions{})
+	var serviceInfos []ServiceInfo
+	if err == nil {
+		for _, svc := range services.Items {
+			ports := ""
+			for i, port := range svc.Spec.Ports {
+				if i > 0 {
+					ports += ", "
+				}
+				ports += port.Name + ":" + port.TargetPort.String()
+			}
+
+			serviceInfos = append(serviceInfos, ServiceInfo{
+				Name:      svc.Name,
+				Namespace: svc.Namespace,
+				Type:      string(svc.Spec.Type),
+				ClusterIP: svc.Spec.ClusterIP,
+				Ports:     ports,
+			})
+		}
+	}
+
+	// StorageClasses
+	storageClasses, err := k8sClient.StorageV1().StorageClasses().List(ctx, metav1.ListOptions{})
+	var storageClassInfos []StorageClassInfo
+	if err == nil {
+		for _, sc := range storageClasses.Items {
+			reclaimPolicy := ""
+			if sc.ReclaimPolicy != nil {
+				reclaimPolicy = string(*sc.ReclaimPolicy)
+			}
+
+			volumeBindingMode := ""
+			if sc.VolumeBindingMode != nil {
+				volumeBindingMode = string(*sc.VolumeBindingMode)
+			}
+
+			storageClassInfos = append(storageClassInfos, StorageClassInfo{
+				Name:              sc.Name,
+				Provisioner:       sc.Provisioner,
+				ReclaimPolicy:     reclaimPolicy,
+				VolumeBindingMode: volumeBindingMode,
+			})
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"nodes": nodeInfos,
-		"pods":  podInfos,
-		"pvcs":  pvcInfos,
+		"nodes":          nodeInfos,
+		"pods":           podInfos,
+		"pvcs":           pvcInfos,
+		"services":       serviceInfos,
+		"storageClasses": storageClassInfos,
 	})
 }
