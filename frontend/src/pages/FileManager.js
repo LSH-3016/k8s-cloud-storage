@@ -4,7 +4,7 @@ import FileList from '../components/FileList';
 import FileUpload from '../components/FileUpload';
 import Breadcrumb from '../components/Breadcrumb';
 import { fetchFiles, uploadFile, createDirectory, deleteFile, copyFile, moveFile, renameFile } from '../utils/api';
-import { normalizePath, isImageFile } from '../utils/helpers';
+import { normalizePath, isImageFile, isVideoFile } from '../utils/helpers';
 import './FileManager.css';
 
 const FileManager = ({ darkMode, username }) => {
@@ -95,6 +95,24 @@ const FileManager = ({ darkMode, username }) => {
         return;
       }
 
+      // 미리보기 모달이 열려있을 때 방향키 처리
+      if (previewImage) {
+        const mediaFiles = files.filter(f => !f.isDir && (isImageFile(f.name) || isVideoFile(f.name)));
+        const currentIndex = mediaFiles.findIndex(f => f.path === previewImage.path);
+        
+        if (e.key === 'ArrowLeft' && currentIndex > 0) {
+          e.preventDefault();
+          setPreviewImage(mediaFiles[currentIndex - 1]);
+        } else if (e.key === 'ArrowRight' && currentIndex < mediaFiles.length - 1) {
+          e.preventDefault();
+          setPreviewImage(mediaFiles[currentIndex + 1]);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          setPreviewImage(null);
+        }
+        return;
+      }
+
       // Ctrl+Z: 실행 취소
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
@@ -140,7 +158,7 @@ const FileManager = ({ darkMode, username }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedFiles, clipboard, currentPath, files, actionHistoryIndex, actionHistory]);
+  }, [selectedFiles, clipboard, currentPath, files, actionHistoryIndex, actionHistory, previewImage]);
 
   // 외부 클릭으로 메뉴 닫기
   useEffect(() => {
@@ -225,7 +243,7 @@ const FileManager = ({ darkMode, username }) => {
   const handleDoubleClick = (file) => {
     if (file.isDir) {
       handleNavigate(file.path);
-    } else if (isImageFile(file.name)) {
+    } else if (isImageFile(file.name) || isVideoFile(file.name)) {
       setPreviewImage(file);
     }
   };
@@ -746,6 +764,7 @@ const FileManager = ({ darkMode, username }) => {
         draggedFile={draggedFile}
         dragOverFolder={dragOverFolder}
         darkMode={darkMode}
+        username={username}
       />
 
       {previewImage && (
@@ -754,13 +773,58 @@ const FileManager = ({ darkMode, username }) => {
             <button className="image-preview-close" onClick={() => setPreviewImage(null)}>
               ✕
             </button>
-            <img 
-              src={`/api/files/download?path=${encodeURIComponent(previewImage.path)}`} 
-              alt={previewImage.name} 
-              className="image-preview" 
-            />
+            
+            {/* 이전 항목 버튼 */}
+            {(() => {
+              const mediaFiles = files.filter(f => !f.isDir && (isImageFile(f.name) || isVideoFile(f.name)));
+              const currentIndex = mediaFiles.findIndex(f => f.path === previewImage.path);
+              return currentIndex > 0 && (
+                <button 
+                  className="preview-nav-btn prev"
+                  onClick={() => setPreviewImage(mediaFiles[currentIndex - 1])}
+                >
+                  ◀
+                </button>
+              );
+            })()}
+            
+            {/* 다음 항목 버튼 */}
+            {(() => {
+              const mediaFiles = files.filter(f => !f.isDir && (isImageFile(f.name) || isVideoFile(f.name)));
+              const currentIndex = mediaFiles.findIndex(f => f.path === previewImage.path);
+              return currentIndex < mediaFiles.length - 1 && (
+                <button 
+                  className="preview-nav-btn next"
+                  onClick={() => setPreviewImage(mediaFiles[currentIndex + 1])}
+                >
+                  ▶
+                </button>
+              );
+            })()}
+            
+            {isImageFile(previewImage.name) ? (
+              <img 
+                src={`/api/files/download?user=${encodeURIComponent(username)}&path=${encodeURIComponent(previewImage.path)}`} 
+                alt={previewImage.name} 
+                className="image-preview" 
+              />
+            ) : isVideoFile(previewImage.name) ? (
+              <video 
+                src={`/api/files/download?user=${encodeURIComponent(username)}&path=${encodeURIComponent(previewImage.path)}`}
+                controls
+                autoPlay
+                className="video-preview"
+              >
+                브라우저가 비디오를 지원하지 않습니다.
+              </video>
+            ) : null}
             <div className="image-preview-info">
               <span>{previewImage.name}</span>
+              {(() => {
+                const mediaFiles = files.filter(f => !f.isDir && (isImageFile(f.name) || isVideoFile(f.name)));
+                const currentIndex = mediaFiles.findIndex(f => f.path === previewImage.path);
+                return <span className="preview-counter"> ({currentIndex + 1} / {mediaFiles.length})</span>;
+              })()}
             </div>
           </div>
         </div>

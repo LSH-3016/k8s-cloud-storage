@@ -18,17 +18,17 @@ spec:
         - name: nfs-client-provisioner
           image: registry.k8s.io/sig-storage/nfs-subdir-external-provisioner:v4.0.2
           volumeMounts:
-            - name: cloud-volume-root
+            - name: nfs-client-root
               mountPath: /persistentvolumes
           env:
             - name: PROVISIONER_NAME
               value: cloud-prov
             - name: NFS_SERVER
-              value: 192.168.0.18    
+              value: 192.168.0.18     # ⚠️ 반드시 수정
             - name: NFS_PATH
-              value: /volume1        
+              value: /volume1                  # ⚠️ NFS 공유 디렉터리 경로
       volumes:
-        - name: cloud-volume-root
+        - name: nfs-client-root
           nfs:
-            server: 192.168.0.18     
+            server: 192.168.0.18      # ⚠️ 동일하게 수정
             path: /volume1

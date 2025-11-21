@@ -16,7 +16,7 @@ spec:
       serviceAccountName: cloud-sa
       containers:
       - name: backend
-        image: lsh3016/k8s-web-back:2
+        image: lsh3016/k8s-web-back:1
         ports:
         - containerPort: 8080
         env:
@@ -69,7 +69,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: lsh3016/k8s-web-front:2
+        image: lsh3016/k8s-web-front:1
         ports:
         - containerPort: 80
         env:

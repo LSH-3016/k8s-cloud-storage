@@ -17,7 +17,8 @@ const FileItem = ({
   onDragEnd,
   isDragging,
   isDragOver,
-  darkMode
+  darkMode,
+  username
 }) => {
   const showThumbnail = isImageFile(file.name) || isVideoFile(file.name);
   const icon = getFileIcon(file.name, file.isDir);
@@ -46,7 +47,7 @@ const FileItem = ({
               </div>
             )}
             <img
-              src={getThumbnailUrl(file.path)}
+              src={getThumbnailUrl(username, file.path)}
               alt={file.name}
               className="file-thumbnail"
               style={{ display: thumbnailLoaded && !thumbnailError ? 'block' : 'none' }}

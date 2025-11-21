@@ -3,7 +3,7 @@ import { downloadFile, deleteFile, renameFile } from '../utils/api';
 import { isVideoFile, isImageFile } from '../utils/helpers';
 import './FileContextMenu.css';
 
-const FileContextMenu = ({ x, y, file, onClose, onRefresh, onCopy, onCut, onPaste, hasClipboard }) => {
+const FileContextMenu = ({ x, y, file, onClose, onRefresh, onCopy, onCut, onPaste, hasClipboard, username }) => {
   const [showRename, setShowRename] = useState(false);
   const [newName, setNewName] = useState(file.name);
   const [showImagePreview, setShowImagePreview] = useState(false);
@@ -16,7 +16,7 @@ const FileContextMenu = ({ x, y, file, onClose, onRefresh, onCopy, onCut, onPast
 
   const handleDownload = () => {
     if (!file.isDir) {
-      downloadFile(file.path);
+      downloadFile(username, file.path);
     }
     onClose();
   };
@@ -24,7 +24,7 @@ const FileContextMenu = ({ x, y, file, onClose, onRefresh, onCopy, onCut, onPast
   const handleOpenWithPlayer = () => {
     // 비디오 파일을 다운로드 URL로 열기 (브라우저가 기본 플레이어나 설정된 앱으로 처리)
     const apiUrl = process.env.REACT_APP_API_URL || '/api';
-    const videoUrl = `${apiUrl}/files/download?path=${encodeURIComponent(file.path)}`;
+    const videoUrl = `${apiUrl}/files/download?user=${encodeURIComponent(username)}&path=${encodeURIComponent(file.path)}`;
     
     // 새 창에서 열기 - 브라우저나 OS가 설정된 플레이어로 처리
     window.open(videoUrl, '_blank');
@@ -93,7 +93,7 @@ const FileContextMenu = ({ x, y, file, onClose, onRefresh, onCopy, onCut, onPast
   const isVideo = isVideoFile(file.name);
   const isImage = isImageFile(file.name);
   const apiUrl = process.env.REACT_APP_API_URL || '/api';
-  const imageUrl = `${apiUrl}/files/download?path=${encodeURIComponent(file.path)}`;
+  const imageUrl = `${apiUrl}/files/download?user=${encodeURIComponent(username)}&path=${encodeURIComponent(file.path)}`;
 
   return (
     <>

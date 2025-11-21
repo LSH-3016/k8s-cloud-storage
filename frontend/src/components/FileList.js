@@ -25,7 +25,8 @@ const FileList = ({
   onDragEnd,
   draggedFile,
   dragOverFolder,
-  darkMode
+  darkMode,
+  username
 }) => {
   const [contextMenu, setContextMenu] = useState(null);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
@@ -221,6 +222,7 @@ const FileList = ({
             isDragging={draggedFile && draggedFile.path === file.path}
             isDragOver={dragOverFolder && dragOverFolder.path === file.path}
             darkMode={darkMode}
+            username={username}
           />
         ))}
       </div>
@@ -249,6 +251,7 @@ const FileList = ({
           onCut={onCut}
           onPaste={onPaste}
           hasClipboard={hasClipboard}
+          username={username}
         />
       )}
     </div>
